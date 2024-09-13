@@ -1,0 +1,13 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::MASTER_ACCOUNT_NUMBER:role/service-role/CUST_NAME-security-hub-lambda-exec-role-REPORT_REGIONS"
+            },
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::S3_BUCKET/*"
+        }
+    ]
+}
