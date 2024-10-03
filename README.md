@@ -24,6 +24,8 @@ DEPLOYMENT COMMANDS:
 
 - Enter the below commands in the "security-hub" directory to plan/deploy the solution. Update the tfvars file name as needed:
 
+$ terraform init
+
 $ terraform plan -var-file=hubbsters.tfvars
 
 $ terraform apply -var-file=hubbsters.tfvars
