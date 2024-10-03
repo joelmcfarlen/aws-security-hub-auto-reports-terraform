@@ -10,12 +10,14 @@ This module is used to deploy an automated Security Hub Reporting Solution and i
 5) Supporting raw documents
 
 DEPLOYMENT NOTES:
-- The required centralized S3 bucket will need to be configured with the bucket policy found in the "files" directory. Replace "MASTER_ACCOUNT_NUMBER", "CUST_NAME","REPORT_REGIONS", and "S3_BUCKET" with the needed information.
-- Adjust the "report_schedule" variable to the needed cadence.
+- The required centralized S3 bucket will need to be configured with the bucket policy found in the "files" directory. Replace "MASTER_ACCOUNT_NUMBER", "CUST_NAME","REPORT_REGIONS", and "S3_BUCKET" with the needed information
+- AWS Org and AWS Config will need to be in place in the Master account
+- Adjust the "report_schedule" variable to the needed cadence
 - Input "n/a" as the value for any "aws_account_X" that are not needed
 - Solution is region specific so you will need a tfvars file per region
+- You will need to enable all Security Hub Standards (i.e. CIS, NIST, ect) in the target accounts you wish to include in the findings report
 
-NOTE: MS Teams webhooks are EOL very soon. This portion will eventual be adjusted as needed
+NOTE: Keep in mind that Security Hub Stanards when first enabled typically take a few hours to gather data. Also, MS Teams webhooks are EOL very soon (Dec 2025). This portion will eventual be adjusted as needed.
 
 
 DEPLOYMENT COMMANDS:
