@@ -59,6 +59,19 @@ variable "aws_account_1" {
    type        = string
  }
 
+// SNS TOPIC ARN
+ variable "sns_topic_arn" {
+   description = "AWS SNS TOPIC ARN"
+   type        = string
+   default     = null
+ }
+
+ // SNS TOPIC USE
+ variable "create_sns" {
+  description = "Set to 'yes' in tfvars to create an SNS topic, otherwise, set to 'no' and input a SNS topic ARN in the tfvars file."
+  type        = string
+  default     = "yes"
+}
 
  // REPORTING SCHEDULE
  variable "report_schedule" {

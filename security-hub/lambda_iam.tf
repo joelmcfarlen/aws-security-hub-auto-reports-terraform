@@ -15,7 +15,7 @@ resource "aws_iam_role" "security_hub_lambda_exec_role" {
 
 resource "aws_iam_role_policy" "lambda_logs_policy" {
   name = "${var.cust_name}-lambda-logs-policy-${var.report_regions}"
-  role = aws_iam_role.security_hub_lambda_exec_role.id  # Correct reference to the role
+  role = aws_iam_role.security_hub_lambda_exec_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -39,7 +39,7 @@ resource "aws_iam_role_policy" "lambda_logs_policy" {
 
 resource "aws_iam_role_policy" "lambda_s3_invoke_policy" {
   name = "${var.cust_name}-lambda-s3-invoke-policy-${var.report_regions}"
-  role = aws_iam_role.security_hub_lambda_exec_role.id  # Correct reference to the role
+  role = aws_iam_role.security_hub_lambda_exec_role.id
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -59,7 +59,23 @@ resource "aws_iam_role_policy" "lambda_s3_invoke_policy" {
   })
 }
 
+resource "aws_iam_role_policy" "sns_access_policy" {
+  name = "${var.cust_name}-sns-access-policy-${var.report_regions}"
+  role = aws_iam_role.security_hub_lambda_exec_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "sns:Publish",
+        Resource = "arn:aws:sns:${var.report_regions}:${var.master_account_number}:${var.cust_name}-security-hub-sns-topic"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "security_hub_readonly" {
-  role       = aws_iam_role.security_hub_lambda_exec_role.id  # This should be ".id" instead of ".name"
+  role       = aws_iam_role.security_hub_lambda_exec_role.id
   policy_arn = "arn:aws:iam::aws:policy/AWSSecurityHubReadOnlyAccess"
 }

@@ -6,7 +6,7 @@ import datetime
 import re
 import boto3
 
-# pip install custom package to /tmp/ and add to path
+# Install custom packages to /tmp/ and add to path
 subprocess.call('pip install openpyxl pymsteams pandas -t /tmp/ --no-cache-dir'.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 sys.path.insert(1, '/tmp/')
 
@@ -54,21 +54,49 @@ def clean_generator_id(generator_id):
 def auto_adjust_column_width(worksheet):
     for col in worksheet.columns:
         max_length = 0
-        col_letter = get_column_letter(col[0].column)  # Get the column letter (e.g., 'A', 'B', 'C', etc.)
+        col_letter = get_column_letter(col[0].column)
         for cell in col:
             try:
                 if cell.value:
                     max_length = max(max_length, len(str(cell.value)))
             except:
                 pass
-        adjusted_width = max_length + 2  # Add some padding
+        adjusted_width = max_length + 2
         worksheet.column_dimensions[col_letter].width = adjusted_width
+
+def send_webhook_notification(msg_text, webhook_urls):
+    for url in webhook_urls:
+        try:
+            print(f"Sending message to {url}")
+            myTeamsMessage = pymsteams.connectorcard(url)
+            myTeamsMessage.title("Security Report Notification")
+            myTeamsMessage.color("0000FF")
+            myTeamsMessage.text(msg_text)
+            myTeamsMessage.send()
+        except Exception as e:
+            print(f"Failed to send webhook notification to {url}: {e}")
+
+def send_sns_notification(msg_text, sns_topic_arn):
+    try:
+        print(f"Sending message to SNS topic {sns_topic_arn}")
+        sns_client = boto3.client('sns')
+        response = sns_client.publish(
+            TopicArn=sns_topic_arn,
+            Message=msg_text,
+            Subject="Security Report Notification"
+        )
+        print(f"Message sent to SNS topic {sns_topic_arn}. Response: {response}")
+    except Exception as e:
+        print(f"Failed to send SNS notification: {e}")
 
 def lambda_handler(event, context):
     regions = os.environ['report_regions'].split(',')
     out_bucket = os.environ['out_bucket']
-    webhookArray = os.environ['web_hook_url'].split(',')
     cust_name = os.environ['cust_name']
+    
+    # Check for optional environment variables
+    webhook_urls = os.environ.get('web_hook_url', '').split(',') if os.environ.get('web_hook_url') else []
+    sns_topic_arn = os.environ.get('sns_topic_arn')
 
     region_identifier = regions[0] if regions else "default-region"
     workbook_name = f"{cust_name}-Security-Hub-Findings-{region_identifier}.xlsx"
@@ -146,12 +174,11 @@ def lambda_handler(event, context):
             df = pd.DataFrame(worksheet.values)
             df.columns = df.iloc[0]
             df = df[1:]
-            df = df.sort_values(by='Severity', ascending=True)  # Sorting by Severity A-Z
+            df = df.sort_values(by='Severity', ascending=True)
             worksheet.delete_rows(2, worksheet.max_row)
             for index, row in df.iterrows():
                 worksheet.append(row.tolist())
 
-            # Apply formatting
             for col_num, cell in enumerate(worksheet[1], 1):
                 cell.font = bold_font
                 cell.fill = light_blue_fill
@@ -160,13 +187,12 @@ def lambda_handler(event, context):
             worksheet.freeze_panes = worksheet['A2']
             worksheet.auto_filter.ref = worksheet.dimensions
 
-            # Adjust the column widths
             auto_adjust_column_width(worksheet)
 
             workbook.save(f"/tmp/{workbook_name}")
 
             try:
-                print('uploading file to s3')
+                print('Uploading file to S3')
                 s3_client = boto3.client('s3')
                 s3_client.upload_file(
                     f"/tmp/{workbook_name}",
@@ -178,15 +204,19 @@ def lambda_handler(event, context):
                 print(e)
 
             try:
-                msg_text = f"Security Hub Report for {cust_name} is ready in the S3 bucket {out_bucket} in your logging account. You can access it via the console or using the cli command '$ aws s3 s3://{out_bucket}/{curr_year}/{curr_month}/{curr_day}/{workbook_name}' when authenticated to your logging account"
-                for url in webhookArray:
-                    print(f"Sending message to {url}")
-                    myTeamsMessage = pymsteams.connectorcard(url)
-                    myTeamsMessage.title("Security Report Notification")
-                    myTeamsMessage.color("0000FF")
-                    myTeamsMessage.text(msg_text)
-                    myTeamsMessage.send()
-            
+                msg_text = f"Security Hub Report for {cust_name} is ready in the S3 bucket {out_bucket} in your logging account. You can access it via the console or using the CLI command '$ aws s3 cp s3://{out_bucket}/SecurityHubReports/{curr_year}/{curr_month}/{curr_day}/{workbook_name}' when authenticated to your logging account."
+
+                # Notify via Webhook if configured
+                if webhook_urls:
+                    send_webhook_notification(msg_text, webhook_urls)
+                else:
+                    print("No webhook URL configured. Skipping webhook notification.")
+
+                # Notify via SNS if configured
+                if sns_topic_arn:
+                    send_sns_notification(msg_text, sns_topic_arn)
+                else:
+                    print("No SNS topic ARN configured. Skipping SNS notification.")
             except Exception as e:
                 print(e)
 

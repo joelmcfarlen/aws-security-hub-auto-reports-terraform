@@ -24,5 +24,13 @@ out_bucket             = ""
  web_hook_url          = ""
 
 
+  // SNS TOPIC ARN (ADD ARN ONLY IF MANUALLY CONFIGURING AN SNS TOPIC IN A SEPERATE AWS ACCOUNT)
+ sns_topic_arn         = ""
+
+
+ // USE SNS SWITCH
+ create_sns               = ""
+
+
  // REPORTING SCHEDULE (UPDATE AS NEEDED)
  report_schedule       = "cron(0 2 1 * ? *)"

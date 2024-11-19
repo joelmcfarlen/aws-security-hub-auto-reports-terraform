@@ -1,0 +1,14 @@
+{
+    "Version": "2012-10-17",
+    "Id": "SNSPublishPolicy",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": ""AWS": "arn:aws:iam::MASTER_ACCOUNT_NUMBER:role/service-role/CUST_NAME-security-hub-lambda-exec-role-REPORT_REGIONS"
+            },
+            "Action": "sns:Publish",
+            "Resource": "arn:aws:sns:REPORT_REGIONS:CURRENT_AWS_ACCOUNT_ID:CUST_NAME-security-hub-sns-topic"
+        }
+    ]
+}
