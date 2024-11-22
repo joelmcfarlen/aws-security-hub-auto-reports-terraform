@@ -11,6 +11,7 @@ This module is used to deploy an automated Security Hub Reporting Solution and i
 5) Supporting raw documents
 
 DEPLOYMENT NOTES:
+- If you plan to deploy this solution to mutiple envieoments via the same module and several tfvar files its best to use terraform workspace for each env/tfvars (cmds below)
 - The required centralized S3 bucket will need to be configured with the bucket policy found in the "files" directory. Replace "MASTER_ACCOUNT_NUMBER", "CUST_NAME","REPORT_REGIONS", and "S3_BUCKET" with the needed information
 - The solution creates an SNS Topic in the master account and dynamically passes the SNS Topic arn to the Lambda as an env variable. If you wish you use an SNS Topic in a different account add this topic's arn to " sns_topic_arn" in the tfvar file and add the value "no" to the variable "create_sns". You can then use the "sns_topic_policy.txt" template to configure an SNS Access Policy for cross account Lambda access. Fill in the needed varaibles in the "sns_topic_policy.txt" file
 - If you only need to use just a webhook or just sn SNS Topic for notifications simple leave these unused varaibles blank in the tfvars file
@@ -21,6 +22,17 @@ DEPLOYMENT NOTES:
 - You will need to enable all Security Hub Standards (i.e. CIS, NIST, ect) in the target accounts you wish to include in the findings report
 
 NOTE: Keep in mind that Security Hub Standards when first enabled typically take a few hours to gather data. Also, MS Teams webhooks are EOL very soon (Dec 2025). This portion will eventual be adjusted as needed.
+
+
+TERRAFORM WORKSPACE COMMANDS:
+
+Enter the below commands in the "security-hub" directory if you plan to deploy the solution to mutiple regions/enviroments (mutiple tfvars files)
+
+$ terraform workspace new WORKSPACE_NAME
+
+$ terraform workspace list
+
+$ terraform workspace select WORKSPACE_NAME
 
 
 DEPLOYMENT COMMANDS:
